@@ -1,0 +1,7 @@
+server/.env
+server/node_modules
+yourtube/node_modules
+yourtube/.next
+yourtube/.env.local
+*.pem
+.DS_Store

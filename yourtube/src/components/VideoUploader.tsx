@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
+import { Textarea } from "./ui/textarea";
 import axiosInstance from "@/lib/axiosinstance";
 
 const VideoUploader = ({ channelId, channelName }: any) => {
@@ -12,8 +13,10 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
+  const [videoDescription, setVideoDescription] = useState("");
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -27,30 +30,25 @@ const VideoUploader = ({ channelId, channelName }: any) => {
         return;
       }
       setVideoFile(file);
-      const filename = file.name;
       if (!videoTitle) {
-        setVideoTitle(filename);
+        setVideoTitle(file.name.replace(/\.[^/.]+$/, ""));
       }
     }
   };
+
   const resetForm = () => {
     setVideoFile(null);
     setVideoTitle("");
+    setVideoDescription("");
     setIsUploading(false);
     setUploadProgress(0);
     setUploadComplete(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
-  const cancelUpload = () => {
-    if (isUploading) {
-      toast.error("Your video upload has been cancelled");
-    }
-  };
+
   const handleUpload = async () => {
     if (!videoFile || !videoTitle.trim()) {
-      toast.error("Please provide file and title");
+      toast.error("Please provide a file and title");
       return;
     }
     const formdata = new FormData();
@@ -58,23 +56,23 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     formdata.append("videotitle", videoTitle);
     formdata.append("videochanel", channelName);
     formdata.append("uploader", channelId);
-    console.log(formdata)
+    formdata.append("description", videoDescription);
+
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      const res = await axiosInstance.post("/video/upload", formdata, {
-         headers: {
-    "Content-Type": "multipart/form-data", // ✅ MUST for FormData
-  },
-        onUploadProgress: (progresEvent: any) => {
+      await axiosInstance.post("/video/upload", formdata, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent: any) => {
           const progress = Math.round(
-            (progresEvent.loaded * 100) / progresEvent.total
+            (progressEvent.loaded * 100) / progressEvent.total
           );
           setUploadProgress(progress);
         },
       });
-      toast.success("Upload successfully");
-      resetForm();
+      setUploadComplete(true);
+      toast.success("Video uploaded successfully!");
+      setTimeout(resetForm, 2000);
     } catch (error) {
       console.error("Error uploading video:", error);
       toast.error("There was an error uploading your video. Please try again.");
@@ -82,10 +80,10 @@ const VideoUploader = ({ channelId, channelName }: any) => {
       setIsUploading(false);
     }
   };
+
   return (
     <div className="bg-gray-50 rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-4">Upload a video</h2>
-
       <div className="space-y-4">
         {!videoFile ? (
           <div
@@ -93,15 +91,9 @@ const VideoUploader = ({ channelId, channelName }: any) => {
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-            <p className="text-lg font-medium">
-              Drag and drop video files to upload
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              or click to select files
-            </p>
-            <p className="text-xs text-gray-400 mt-4">
-              MP4, WebM, MOV or AVI • Up to 100MB
-            </p>
+            <p className="text-lg font-medium">Drag and drop video files to upload</p>
+            <p className="text-sm text-gray-500 mt-1">or click to select files</p>
+            <p className="text-xs text-gray-400 mt-4">MP4, WebM, MOV or AVI • Up to 100MB</p>
             <input
               type="file"
               ref={fileInputRef}
@@ -122,11 +114,6 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                   {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
                 </p>
               </div>
-              {!isUploading && (
-                <Button variant="ghost" size="icon" onClick={cancelUpload}>
-                  <X className="w-5 h-5" />
-                </Button>
-              )}
               {uploadComplete && (
                 <div className="bg-green-100 p-1 rounded-full">
                   <Check className="w-5 h-5 text-green-600" />
@@ -146,6 +133,18 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                   className="mt-1"
                 />
               </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={videoDescription}
+                  onChange={(e) => setVideoDescription(e.target.value)}
+                  placeholder="Tell viewers about your video..."
+                  disabled={isUploading || uploadComplete}
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
             </div>
 
             {isUploading && (
@@ -161,14 +160,12 @@ const VideoUploader = ({ channelId, channelName }: any) => {
             <div className="flex justify-end gap-3">
               {!uploadComplete && (
                 <>
-                  <Button onClick={cancelUpload} disabled={uploadComplete}>
+                  <Button variant="outline" onClick={resetForm} disabled={isUploading}>
                     Cancel
                   </Button>
                   <Button
                     onClick={handleUpload}
-                    disabled={
-                      isUploading || !videoTitle.trim() || uploadComplete
-                    }
+                    disabled={isUploading || !videoTitle.trim()}
                   >
                     {isUploading ? "Uploading..." : "Upload"}
                   </Button>

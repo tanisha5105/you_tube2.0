@@ -1,18 +1,26 @@
 import Link from "next/link";
-import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 interface RelatedVideosProps {
   videos: Array<{
     _id: string;
     videotitle: string;
     videochanel: string;
+    filepath: string;
     views: number;
     createdAt: string;
   }>;
 }
-const vid = "/video/vdo.mp4";
+
 export default function RelatedVideos({ videos }: RelatedVideosProps) {
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
+  if (!videos || videos.length === 0) {
+    return <p className="text-sm text-gray-500">No related videos.</p>;
+  }
+
   return (
     <div className="space-y-2">
       {videos.map((video) => (
@@ -23,8 +31,9 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
         >
           <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden flex-shrink-0">
             <video
-              src={vid}
-              className="object-cover group-hover:scale-105 transition-transform duration-200"
+              src={`${backendUrl}/${video.filepath}`}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              preload="metadata"
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -33,7 +42,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
             </h3>
             <p className="text-xs text-gray-600 mt-1">{video.videochanel}</p>
             <p className="text-xs text-gray-600">
-              {video.views.toLocaleString()} views •{" "}
+              {video.views?.toLocaleString()} views •{" "}
               {formatDistanceToNow(new Date(video.createdAt))} ago
             </p>
           </div>

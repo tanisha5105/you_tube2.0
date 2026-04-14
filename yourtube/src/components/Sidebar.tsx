@@ -6,6 +6,8 @@ import {
   ThumbsUp,
   History,
   User,
+  Download,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -13,29 +15,38 @@ import { Button } from "./ui/button";
 import Channeldialogue from "./channeldialogue";
 import { useUser } from "@/lib/AuthContext";
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) => {
   const { user } = useUser();
-
   const [isdialogeopen, setisdialogeopen] = useState(false);
+
   return (
-    <aside className="w-64 bg-white  border-r min-h-screen p-2">
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside className={`
+        w-64 bg-background border-r min-h-screen p-2 flex-shrink-0
+        fixed lg:static z-40 top-0 left-0 h-full transition-transform duration-300
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+      `}>
       <nav className="space-y-1">
         <Link href="/">
           <Button variant="ghost" className="w-full justify-start">
-            <Home className="w-5 h-5 mr-3" />
-            Home
+            <Home className="w-5 h-5 mr-3" />Home
           </Button>
         </Link>
         <Link href="/explore">
           <Button variant="ghost" className="w-full justify-start">
-            <Compass className="w-5 h-5 mr-3" />
-            Explore
+            <Compass className="w-5 h-5 mr-3" />Explore
           </Button>
         </Link>
         <Link href="/subscriptions">
           <Button variant="ghost" className="w-full justify-start">
-            <PlaySquare className="w-5 h-5 mr-3" />
-            Subscriptions
+            <PlaySquare className="w-5 h-5 mr-3" />Subscriptions
           </Button>
         </Link>
 
@@ -44,37 +55,38 @@ const Sidebar = () => {
             <div className="border-t pt-2 mt-2">
               <Link href="/history">
                 <Button variant="ghost" className="w-full justify-start">
-                  <History className="w-5 h-5 mr-3" />
-                  History
+                  <History className="w-5 h-5 mr-3" />History
                 </Button>
               </Link>
               <Link href="/liked">
                 <Button variant="ghost" className="w-full justify-start">
-                  <ThumbsUp className="w-5 h-5 mr-3" />
-                  Liked videos
+                  <ThumbsUp className="w-5 h-5 mr-3" />Liked videos
                 </Button>
               </Link>
               <Link href="/watch-later">
                 <Button variant="ghost" className="w-full justify-start">
-                  <Clock className="w-5 h-5 mr-3" />
-                  Watch later
+                  <Clock className="w-5 h-5 mr-3" />Watch later
+                </Button>
+              </Link>
+              <Link href="/downloads">
+                <Button variant="ghost" className="w-full justify-start">
+                  <Download className="w-5 h-5 mr-3" />Downloads
+                </Button>
+              </Link>
+              <Link href="/upgrade">
+                <Button variant="ghost" className="w-full justify-start text-yellow-600">
+                  <Crown className="w-5 h-5 mr-3" />Upgrade Plan
                 </Button>
               </Link>
               {user?.channelname ? (
-                <Link href={`/channel/${user.id}`}>
+                <Link href={`/channel/${user._id}`}>
                   <Button variant="ghost" className="w-full justify-start">
-                    <User className="w-5 h-5 mr-3" />
-                    Your channel
+                    <User className="w-5 h-5 mr-3" />Your channel
                   </Button>
                 </Link>
               ) : (
                 <div className="px-2 py-1.5">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setisdialogeopen(true)}
-                  >
+                  <Button variant="secondary" size="sm" className="w-full" onClick={() => setisdialogeopen(true)}>
                     Create Channel
                   </Button>
                 </div>
@@ -83,12 +95,9 @@ const Sidebar = () => {
           </>
         )}
       </nav>
-      <Channeldialogue
-        isopen={isdialogeopen}
-        onclose={() => setisdialogeopen(false)}
-        mode="create"
-      />
+      <Channeldialogue isopen={isdialogeopen} onclose={() => setisdialogeopen(false)} mode="create" />
     </aside>
+    </>
   );
 };
 

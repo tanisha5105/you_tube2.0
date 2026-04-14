@@ -50,7 +50,9 @@ const Videogrid = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {loading ? (
-        <>Loading..</>
+        <p className="col-span-4 text-center text-gray-500">Loading videos...</p>
+      ) : !videos || videos.length === 0 ? (
+        <p className="col-span-4 text-center text-gray-500">No videos yet.</p>
       ) : (
         videos.map((video: any) => <Videocard key={video._id} video={video} />)
       )}

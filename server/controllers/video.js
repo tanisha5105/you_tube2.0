@@ -10,11 +10,12 @@ export const uploadvideo = async (req, res) => {
       const file = new video({
         videotitle: req.body.videotitle,
         filename: req.file.originalname,
-        filepath: req.file.path,
+        filepath: req.file.path.replace(/\\/g, "/"),
         filetype: req.file.mimetype,
         filesize: req.file.size,
         videochanel: req.body.videochanel,
         uploader: req.body.uploader,
+        description: req.body.description || "",
       });
       await file.save();
       return res.status(201).json("file uploaded successfully");
@@ -27,6 +28,17 @@ export const uploadvideo = async (req, res) => {
 export const getallvideo = async (req, res) => {
   try {
     const files = await video.find();
+    return res.status(200).send(files);
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const getVideosByUploader = async (req, res) => {
+  const { uploaderId } = req.params;
+  try {
+    const files = await video.find({ uploader: uploaderId });
     return res.status(200).send(files);
   } catch (error) {
     console.error(" error:", error);
